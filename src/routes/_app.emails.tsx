@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -119,20 +119,27 @@ function EmailDialog({
     timezone: "UTC",
   });
 
-  // sync form when opening
-  useState(() => 0);
-  if (open && editing && form.subject !== editing.subject) {
-    setForm({
-      recipient_email: editing.recipient_email,
-      subject: editing.subject,
-      body: editing.body,
-      scheduled_time: editing.scheduled_time,
-      status: editing.status,
-      recurring: editing.recurring ?? false,
-      interval: editing.interval ?? null,
-      timezone: editing.timezone ?? "UTC",
-    });
-  }
+  useEffect(() => {
+    if (open && editing) {
+      setForm({
+        recipient_email: editing.recipient_email,
+        subject: editing.subject,
+        body: editing.body,
+        scheduled_time: editing.scheduled_time,
+        status: editing.status,
+        recurring: editing.recurring ?? false,
+        interval: editing.interval ?? null,
+        timezone: editing.timezone ?? "UTC",
+      });
+    }
+    if (open && !editing) {
+      setForm({
+        recipient_email: "", subject: "", body: "",
+        scheduled_time: new Date().toISOString(),
+        status: "Pending", recurring: false, interval: null, timezone: "UTC",
+      });
+    }
+  }, [open, editing]);
 
   const reset = () => setForm({
     recipient_email: "", subject: "", body: "",
