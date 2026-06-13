@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useState as _u } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { apiClient, type TemplateCreate, type TemplateResponse } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";

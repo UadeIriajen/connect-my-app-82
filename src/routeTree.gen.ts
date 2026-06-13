@@ -16,9 +16,11 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTemplatesRouteImport } from './routes/_app.templates'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppEmailsRouteImport } from './routes/_app.emails'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppContactsRouteImport } from './routes/_app.contacts'
+import { Route as AppBroadcastRouteImport } from './routes/_app.broadcast'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -54,6 +56,11 @@ const AppTemplatesRoute = AppTemplatesRouteImport.update({
   path: '/templates',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEmailsRoute = AppEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
@@ -69,6 +76,11 @@ const AppContactsRoute = AppContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBroadcastRoute = AppBroadcastRouteImport.update({
+  id: '/broadcast',
+  path: '/broadcast',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -76,9 +88,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/broadcast': typeof AppBroadcastRoute
   '/contacts': typeof AppContactsRoute
   '/dashboard': typeof AppDashboardRoute
   '/emails': typeof AppEmailsRoute
+  '/settings': typeof AppSettingsRoute
   '/templates': typeof AppTemplatesRoute
 }
 export interface FileRoutesByTo {
@@ -87,9 +101,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/broadcast': typeof AppBroadcastRoute
   '/contacts': typeof AppContactsRoute
   '/dashboard': typeof AppDashboardRoute
   '/emails': typeof AppEmailsRoute
+  '/settings': typeof AppSettingsRoute
   '/templates': typeof AppTemplatesRoute
 }
 export interface FileRoutesById {
@@ -100,9 +116,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_app/broadcast': typeof AppBroadcastRoute
   '/_app/contacts': typeof AppContactsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/emails': typeof AppEmailsRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/templates': typeof AppTemplatesRoute
 }
 export interface FileRouteTypes {
@@ -113,9 +131,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/broadcast'
     | '/contacts'
     | '/dashboard'
     | '/emails'
+    | '/settings'
     | '/templates'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -124,9 +144,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/broadcast'
     | '/contacts'
     | '/dashboard'
     | '/emails'
+    | '/settings'
     | '/templates'
   id:
     | '__root__'
@@ -136,9 +158,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/_app/broadcast'
     | '/_app/contacts'
     | '/_app/dashboard'
     | '/_app/emails'
+    | '/_app/settings'
     | '/_app/templates'
   fileRoutesById: FileRoutesById
 }
@@ -202,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTemplatesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/emails': {
       id: '/_app/emails'
       path: '/emails'
@@ -223,20 +254,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppContactsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/broadcast': {
+      id: '/_app/broadcast'
+      path: '/broadcast'
+      fullPath: '/broadcast'
+      preLoaderRoute: typeof AppBroadcastRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppBroadcastRoute: typeof AppBroadcastRoute
   AppContactsRoute: typeof AppContactsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmailsRoute: typeof AppEmailsRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppTemplatesRoute: typeof AppTemplatesRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBroadcastRoute: AppBroadcastRoute,
   AppContactsRoute: AppContactsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmailsRoute: AppEmailsRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppTemplatesRoute: AppTemplatesRoute,
 }
 
