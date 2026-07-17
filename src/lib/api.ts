@@ -268,6 +268,24 @@ export const apiClient = {
     return api<unknown>("/contacts/import", { method: "POST", body: fd });
   },
 
+  // Lists
+  listLists: () => api<ContactListResponse[]>("/lists"),
+  createList: (data: ContactListCreate) =>
+    api<ContactListResponse>("/lists", { method: "POST", body: data }),
+  getList: (id: number) => api<ContactListResponse>(`/lists/${id}`),
+  updateList: (id: number, data: ContactListUpdate) =>
+    api<ContactListResponse>(`/lists/${id}`, { method: "PUT", body: data }),
+  deleteList: (id: number) => api<unknown>(`/lists/${id}`, { method: "DELETE" }),
+  listMembers: (id: number) =>
+    api<ListMemberResponse[]>(`/lists/${id}/members`),
+  addContactToList: (listId: number, contactId: number) =>
+    api<unknown>(`/lists/${listId}/members`, {
+      method: "POST",
+      body: { contact_id: contactId },
+    }),
+  removeContactFromList: (listId: number, contactId: number) =>
+    api<unknown>(`/lists/${listId}/members/${contactId}`, { method: "DELETE" }),
+
   // Templates
   createTemplate: (data: TemplateCreate) =>
     api<TemplateResponse>("/templates", { method: "POST", body: data }),
