@@ -272,7 +272,7 @@ function ListDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  useState(() => {
+  useEffect(() => {
     if (open && editing) {
       setName(editing.name);
       setDescription(editing.description ?? "");
@@ -280,7 +280,7 @@ function ListDialog({
       setName("");
       setDescription("");
     }
-  });
+  }, [open, editing]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
