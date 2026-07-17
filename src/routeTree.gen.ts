@@ -17,6 +17,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTemplatesRouteImport } from './routes/_app.templates'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppListsRouteImport } from './routes/_app.lists'
 import { Route as AppEmailsRouteImport } from './routes/_app.emails'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppContactsRouteImport } from './routes/_app.contacts'
@@ -61,6 +62,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppListsRoute = AppListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEmailsRoute = AppEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AppContactsRoute
   '/dashboard': typeof AppDashboardRoute
   '/emails': typeof AppEmailsRoute
+  '/lists': typeof AppListsRoute
   '/settings': typeof AppSettingsRoute
   '/templates': typeof AppTemplatesRoute
 }
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/contacts': typeof AppContactsRoute
   '/dashboard': typeof AppDashboardRoute
   '/emails': typeof AppEmailsRoute
+  '/lists': typeof AppListsRoute
   '/settings': typeof AppSettingsRoute
   '/templates': typeof AppTemplatesRoute
 }
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_app/contacts': typeof AppContactsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/emails': typeof AppEmailsRoute
+  '/_app/lists': typeof AppListsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/templates': typeof AppTemplatesRoute
 }
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/emails'
+    | '/lists'
     | '/settings'
     | '/templates'
   fileRoutesByTo: FileRoutesByTo
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/emails'
+    | '/lists'
     | '/settings'
     | '/templates'
   id:
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_app/contacts'
     | '/_app/dashboard'
     | '/_app/emails'
+    | '/_app/lists'
     | '/_app/settings'
     | '/_app/templates'
   fileRoutesById: FileRoutesById
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/lists': {
+      id: '/_app/lists'
+      path: '/lists'
+      fullPath: '/lists'
+      preLoaderRoute: typeof AppListsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/emails': {
       id: '/_app/emails'
       path: '/emails'
@@ -269,6 +288,7 @@ interface AppRouteChildren {
   AppContactsRoute: typeof AppContactsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppEmailsRoute: typeof AppEmailsRoute
+  AppListsRoute: typeof AppListsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTemplatesRoute: typeof AppTemplatesRoute
 }
@@ -278,6 +298,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContactsRoute: AppContactsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppEmailsRoute: AppEmailsRoute,
+  AppListsRoute: AppListsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTemplatesRoute: AppTemplatesRoute,
 }

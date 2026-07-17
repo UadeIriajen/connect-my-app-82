@@ -186,6 +186,31 @@ export interface BroadcastModel {
   recurring?: boolean;
 }
 
+export interface ContactListResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+  created_at: string;
+  member_count?: number;
+}
+
+export interface ContactListCreate {
+  name: string;
+  description?: string | null;
+}
+
+export interface ContactListUpdate {
+  name?: string | null;
+  description?: string | null;
+}
+
+export interface ListMemberResponse {
+  list_id: number;
+  contact_id: number;
+  contact: ContactResponse;
+  added_at: string;
+}
+
 export interface UserRead extends StoredUser {
   access_token?: string | null;
   token_type?: string | null;
@@ -242,6 +267,24 @@ export const apiClient = {
     fd.append("file", file);
     return api<unknown>("/contacts/import", { method: "POST", body: fd });
   },
+
+  // Lists
+  listLists: () => api<ContactListResponse[]>("/lists"),
+  createList: (data: ContactListCreate) =>
+    api<ContactListResponse>("/lists", { method: "POST", body: data }),
+  getList: (id: number) => api<ContactListResponse>(`/lists/${id}`),
+  updateList: (id: number, data: ContactListUpdate) =>
+    api<ContactListResponse>(`/lists/${id}`, { method: "PUT", body: data }),
+  deleteList: (id: number) => api<unknown>(`/lists/${id}`, { method: "DELETE" }),
+  listMembers: (id: number) =>
+    api<ListMemberResponse[]>(`/lists/${id}/members`),
+  addContactToList: (listId: number, contactId: number) =>
+    api<unknown>(`/lists/${listId}/members`, {
+      method: "POST",
+      body: { contact_id: contactId },
+    }),
+  removeContactFromList: (listId: number, contactId: number) =>
+    api<unknown>(`/lists/${listId}/members/${contactId}`, { method: "DELETE" }),
 
   // Templates
   createTemplate: (data: TemplateCreate) =>
