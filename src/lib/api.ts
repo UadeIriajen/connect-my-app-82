@@ -186,6 +186,31 @@ export interface BroadcastModel {
   recurring?: boolean;
 }
 
+export interface ContactListResponse {
+  id: number;
+  name: string;
+  description?: string | null;
+  created_at: string;
+  member_count?: number;
+}
+
+export interface ContactListCreate {
+  name: string;
+  description?: string | null;
+}
+
+export interface ContactListUpdate {
+  name?: string | null;
+  description?: string | null;
+}
+
+export interface ListMemberResponse {
+  list_id: number;
+  contact_id: number;
+  contact: ContactResponse;
+  added_at: string;
+}
+
 export interface UserRead extends StoredUser {
   access_token?: string | null;
   token_type?: string | null;
