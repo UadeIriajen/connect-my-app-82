@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Mail,
   Users,
+  List,
   FileText,
   Megaphone,
   Settings,
@@ -18,6 +19,7 @@ const nav = [
   { to: "/emails", label: "Scheduled Emails", icon: Mail },
   { to: "/broadcast", label: "Broadcast", icon: Megaphone },
   { to: "/contacts", label: "Contacts", icon: Users },
+  { to: "/lists", label: "Lists", icon: List },
   { to: "/templates", label: "Templates", icon: FileText },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
