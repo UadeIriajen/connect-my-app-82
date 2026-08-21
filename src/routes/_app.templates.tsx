@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type TemplateCreate, type TemplateResponse } from "@/lib/api";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -17,45 +18,32 @@ export const Route = createFileRoute("/_app/templates")({
   component: TemplatesPage,
 });
 
-// Templates are created/updated/deleted; the API doesn't expose a list endpoint,
-// so we keep a local cache of templates created in this browser session.
-const LS_KEY = "templates_cache";
-
-function loadCache(): TemplateResponse[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
-}
-function saveCache(items: TemplateResponse[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(items));
-}
-
 function TemplatesPage() {
-  const [items, setItems] = useState<TemplateResponse[]>([]);
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateResponse | null>(null);
 
-  useEffect(() => { setItems(loadCache()); }, []);
+  const { data, isLoading } = useQuery({
+    queryKey: ["templates"],
+    queryFn: apiClient.listTemplates,
+  });
 
-  const upsert = (t: TemplateResponse) => {
-    const next = items.some((i) => i.id === t.id)
-      ? items.map((i) => (i.id === t.id ? t : i))
-      : [t, ...items];
-    setItems(next);
-    saveCache(next);
-  };
-  const remove = (id: number) => {
-    const next = items.filter((i) => i.id !== id);
-    setItems(next);
-    saveCache(next);
-  };
+  const del = useMutation({
+    mutationFn: (id: number) => apiClient.deleteTemplate(id),
+    onSuccess: () => {
+      toast.success("Template deleted");
+      qc.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
 
-  const visible = items.filter((i) => !i.is_deleted);
+  const visible = (data ?? []).filter((t) => !t.is_deleted);
 
   return (
     <div>
       <PageHeader
         title="Message Templates"
-        description="Reusable templates with variables like {first_name}."
+        description="Reusable templates with variables like {'{first_name}'}."
         actions={
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> New template
@@ -63,119 +51,100 @@ function TemplatesPage() {
         }
       />
 
-      {visible.length === 0 ? (
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : visible.length === 0 ? (
         <Card>
-          <CardContent className="py-16 text-center">
-            <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
-            <p className="mt-3 font-medium">No templates yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Create your first reusable message template.</p>
+          <CardContent className="py-12 text-center">
+            <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground">No templates yet.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((t) => (
-            <Card key={t.id}>
-              <CardContent className="pt-6 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{t.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{t.subject}</p>
-                  </div>
-                  <div className="flex">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={async () => {
-                      try {
-                        await apiClient.deleteTemplate(t.id);
-                        remove(t.id);
-                        toast.success("Deleted");
-                      } catch (e) {
-                        toast.error(e instanceof Error ? e.message : "Failed");
-                      }
-                    }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">{t.body}</p>
+            <Card key={t.id} className="flex flex-col">
+              <CardContent className="pt-6 flex-1">
+                <p className="font-medium">{t.title}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t.subject}</p>
+                <p className="text-xs text-muted-foreground mt-3 line-clamp-4 whitespace-pre-wrap">
+                  {t.body}
+                </p>
               </CardContent>
+              <div className="flex justify-end gap-1 border-t p-2">
+                <Button size="icon" variant="ghost" onClick={() => { setEditing(t); setOpen(true); }}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => del.mutate(t.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
       )}
 
-      <TemplateDialog
-        open={open}
-        setOpen={setOpen}
-        editing={editing}
-        onSaved={(t) => upsert(t)}
-      />
+      <TemplateDialog open={open} setOpen={setOpen} editing={editing} />
     </div>
   );
 }
 
 function TemplateDialog({
-  open, setOpen, editing, onSaved,
-}: {
-  open: boolean; setOpen: (o: boolean) => void;
-  editing: TemplateResponse | null;
-  onSaved: (t: TemplateResponse) => void;
-}) {
+  open, setOpen, editing,
+}: { open: boolean; setOpen: (o: boolean) => void; editing: TemplateResponse | null }) {
+  const qc = useQueryClient();
   const [form, setForm] = useState<TemplateCreate>({ title: "", subject: "", body: "" });
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (open && editing) setForm({ title: editing.title, subject: editing.subject, body: editing.body });
-    else if (open) setForm({ title: "", subject: "", body: "" });
+    if (!open) return;
+    setForm(
+      editing
+        ? { title: editing.title, subject: editing.subject, body: editing.body }
+        : { title: "", subject: "", body: "" },
+    );
   }, [open, editing]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      const res = editing
-        ? await apiClient.updateTemplate(editing.id, form)
-        : await apiClient.createTemplate(form);
-      onSaved(res);
+  const save = useMutation({
+    mutationFn: (data: TemplateCreate) =>
+      editing ? apiClient.updateTemplate(editing.id, data) : apiClient.createTemplate(data),
+    onSuccess: () => {
       toast.success(editing ? "Template updated" : "Template created");
+      qc.invalidateQueries({ queryKey: ["templates"] });
       setOpen(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
-    } finally {
-      setBusy(false);
-    }
-  };
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{editing ? "Edit template" : "New template"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => { e.preventDefault(); save.mutate(form); }}
+        >
           <div className="space-y-2">
             <Label>Title</Label>
             <Input required value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="Welcome Onboarding" />
+              onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label>Subject</Label>
             <Input required value={form.subject}
-              onChange={(e) => setForm({ ...form, subject: e.target.value })}
-              placeholder="Welcome, {first_name}!" />
+              onChange={(e) => setForm({ ...form, subject: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label>Body</Label>
-            <Textarea required rows={8} value={form.body}
-              onChange={(e) => setForm({ ...form, body: e.target.value })}
-              placeholder="Hi {first_name}, …" />
-            <p className="text-xs text-muted-foreground">Use tags like {"{first_name}"} or {"{email}"}.</p>
+            <Textarea required rows={6} value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Button>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending ? "Saving…" : editing ? "Update" : "Create"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

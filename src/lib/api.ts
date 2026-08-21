@@ -211,10 +211,45 @@ export interface ListMemberResponse {
   added_at: string;
 }
 
+export interface EmailStatusResponse {
+  total: number;
+  pending: number;
+  sent: number;
+  failed: number;
+  canceled: number;
+}
+
+export interface EmailScheduleUpdate {
+  recipient_email?: string | null;
+  subject?: string | null;
+  body?: string | null;
+  scheduled_time?: string | null;
+}
+
+export interface CampaignStep {
+  step: number;
+  subject: string;
+  body: string;
+  wait_days?: number;
+  condition?: string | null;
+}
+
+export interface CampaignSequenceCreate {
+  campaign_id: number;
+  recipient_email: string;
+  steps: CampaignStep[];
+}
+
+export interface CampaignSequenceResponse {
+  campaign_id: number;
+  steps_created: number;
+}
+
 export interface UserRead extends StoredUser {
   access_token?: string | null;
   token_type?: string | null;
 }
+
 
 export const apiClient = {
   // Auth
@@ -241,12 +276,29 @@ export const apiClient = {
       { method: "POST" },
     ),
 
+  verifyOtp: (email: string, code: string) =>
+    api<unknown>("/auth/verify_otp", { method: "POST", body: { email, code }, auth: false }),
+  deleteAccount: () => api<unknown>("/auth/me", { method: "DELETE" }),
+
   // Emails
   listEmails: () => api<ScheduleResponse[]>("/emails/"),
+  filterEmails: (params: { status?: string | null; time_filter?: string | null } = {}) => {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    if (params.time_filter) q.set("time_filter", params.time_filter);
+    const s = q.toString();
+    return api<ScheduleResponse[]>(`/emails/filter${s ? `?${s}` : ""}`);
+  },
+  emailStats: () => api<EmailStatusResponse>("/emails/stats"),
+  getEmail: (id: number) => api<ScheduleResponse>(`/emails/${id}`),
   createEmail: (data: ScheduleCreate) =>
     api<ScheduleResponse>("/emails/", { method: "POST", body: data }),
   updateEmail: (id: number, data: ScheduleCreate) =>
     api<ScheduleResponse>(`/emails/${id}`, { method: "PUT", body: data }),
+  patchEmail: (id: number, data: EmailScheduleUpdate) =>
+    api<ScheduleResponse>(`/emails/${id}`, { method: "PATCH", body: data }),
+  cancelEmail: (id: number) => api<unknown>(`/emails/${id}/cancel`, { method: "POST" }),
+  retryEmail: (id: number) => api<unknown>(`/emails/${id}/retry`, { method: "POST" }),
   deleteEmail: (id: number) => api<unknown>(`/emails/${id}`, { method: "DELETE" }),
 
   // Contacts
@@ -268,31 +320,41 @@ export const apiClient = {
     return api<unknown>("/contacts/import", { method: "POST", body: fd });
   },
 
-  // Lists
-  listLists: () => api<ContactListResponse[]>("/lists"),
+  // Lists (contact segments)
+  listLists: () => api<ContactListResponse[]>("/contacts/list"),
   createList: (data: ContactListCreate) =>
-    api<ContactListResponse>("/lists", { method: "POST", body: data }),
-  getList: (id: number) => api<ContactListResponse>(`/lists/${id}`),
+    api<ContactListResponse>("/contacts/list", { method: "POST", body: data }),
+  getList: (id: number) => api<ContactListResponse>(`/contacts/lists/${id}`),
   updateList: (id: number, data: ContactListUpdate) =>
-    api<ContactListResponse>(`/lists/${id}`, { method: "PUT", body: data }),
-  deleteList: (id: number) => api<unknown>(`/lists/${id}`, { method: "DELETE" }),
+    api<ContactListResponse>(`/contacts/lists/${id}`, { method: "PUT", body: data }),
+  deleteList: (id: number) =>
+    api<unknown>(`/contacts/lists/${id}`, { method: "DELETE" }),
   listMembers: (id: number) =>
-    api<ListMemberResponse[]>(`/lists/${id}/members`),
+    api<ListMemberResponse[]>(`/contacts/lists/${id}/members`),
   addContactToList: (listId: number, contactId: number) =>
-    api<unknown>(`/lists/${listId}/members`, {
+    api<unknown>(`/contacts/lists/${listId}/members`, {
       method: "POST",
       body: { contact_id: contactId },
     }),
   removeContactFromList: (listId: number, contactId: number) =>
-    api<unknown>(`/lists/${listId}/members/${contactId}`, { method: "DELETE" }),
+    api<unknown>(`/contacts/lists/${listId}/members/${contactId}`, { method: "DELETE" }),
 
   // Templates
+  listTemplates: () => api<TemplateResponse[]>("/templates"),
   createTemplate: (data: TemplateCreate) =>
     api<TemplateResponse>("/templates", { method: "POST", body: data }),
   updateTemplate: (id: number, data: TemplateUpdate) =>
     api<TemplateResponse>(`/templates/${id}`, { method: "PUT", body: data }),
   deleteTemplate: (id: number) =>
     api<unknown>(`/templates/${id}`, { method: "DELETE" }),
+
+  // Campaigns
+  createSequence: (data: CampaignSequenceCreate) =>
+    api<CampaignSequenceResponse>("/campaigns/create-sequence", {
+      method: "POST",
+      body: data,
+    }),
+
 
   // Broadcast
   sendBroadcast: (data: BroadcastModel) =>
