@@ -211,10 +211,45 @@ export interface ListMemberResponse {
   added_at: string;
 }
 
+export interface EmailStatusResponse {
+  total: number;
+  pending: number;
+  sent: number;
+  failed: number;
+  canceled: number;
+}
+
+export interface EmailScheduleUpdate {
+  recipient_email?: string | null;
+  subject?: string | null;
+  body?: string | null;
+  scheduled_time?: string | null;
+}
+
+export interface CampaignStep {
+  step: number;
+  subject: string;
+  body: string;
+  wait_days?: number;
+  condition?: string | null;
+}
+
+export interface CampaignSequenceCreate {
+  campaign_id: number;
+  recipient_email: string;
+  steps: CampaignStep[];
+}
+
+export interface CampaignSequenceResponse {
+  campaign_id: number;
+  steps_created: number;
+}
+
 export interface UserRead extends StoredUser {
   access_token?: string | null;
   token_type?: string | null;
 }
+
 
 export const apiClient = {
   // Auth
