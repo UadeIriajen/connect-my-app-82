@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/emails")({
@@ -84,6 +84,29 @@ function EmailsPage() {
         }
       />
 
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">Status</span>
+          <div className="flex gap-1">
+            {STATUSES.map((s) => (
+              <Button key={s} size="sm" variant={status === s ? "default" : "outline"} onClick={() => setStatus(s)}>
+                {s === "all" ? "All" : s}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">When</span>
+          <div className="flex gap-1">
+            {TIME_FILTERS.map((t) => (
+              <Button key={t} size="sm" variant={timeFilter === t ? "default" : "outline"} onClick={() => setTimeFilter(t)}>
+                {t === "all" ? "All" : t === "upcoming" ? "Upcoming" : "History"}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
@@ -114,7 +137,19 @@ function EmailsPage() {
                       <Badge variant={e.status === "Pending" ? "outline" : "secondary"}>{e.status}</Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button size="icon" variant="ghost" onClick={() => { setEditing(e); setOpen(true); }}>
+                      {e.status === "Pending" ? (
+                        <Button size="icon" variant="ghost" title="Cancel"
+                          disabled={cancel.isPending} onClick={() => cancel.mutate(e.id)}>
+                          <Ban className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                      {e.status === "Failed" || e.status === "Canceled" ? (
+                        <Button size="icon" variant="ghost" title="Retry"
+                          disabled={retry.isPending} onClick={() => retry.mutate(e.id)}>
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                      <Button size="icon" variant="ghost" title="Edit" onClick={() => { setEditing(e); setOpen(true); }}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => del.mutate(e.id)}>
