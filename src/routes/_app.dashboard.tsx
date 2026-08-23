@@ -13,16 +13,20 @@ export const Route = createFileRoute("/_app/dashboard")({
 function Dashboard() {
   const emails = useQuery({ queryKey: ["emails"], queryFn: apiClient.listEmails });
   const contacts = useQuery({ queryKey: ["contacts"], queryFn: apiClient.listContacts });
+  const stats_ = useQuery({ queryKey: ["email-stats"], queryFn: apiClient.emailStats });
+  const templates = useQuery({ queryKey: ["templates"], queryFn: apiClient.listTemplates });
 
   const upcoming = (emails.data ?? [])
     .filter((e) => new Date(e.scheduled_time) > new Date())
     .sort((a, b) => new Date(a.scheduled_time).getTime() - new Date(b.scheduled_time).getTime())
     .slice(0, 5);
 
+  const s = stats_.data;
+
   const stats = [
     {
       label: "Scheduled emails",
-      value: emails.data?.length ?? "—",
+      value: s?.total ?? emails.data?.length ?? "—",
       icon: Mail,
       to: "/emails",
     },
@@ -34,17 +38,26 @@ function Dashboard() {
     },
     {
       label: "Upcoming sends",
-      value: upcoming.length,
+      value: s?.pending ?? upcoming.length,
       icon: Calendar,
       to: "/emails",
     },
     {
       label: "Templates",
-      value: "—",
+      value: templates.data?.length ?? "—",
       icon: FileText,
       to: "/templates",
     },
   ] as const;
+
+  const breakdown = s
+    ? ([
+        { label: "Pending", value: s.pending },
+        { label: "Sent", value: s.sent },
+        { label: "Failed", value: s.failed },
+        { label: "Canceled", value: s.canceled },
+      ] as const)
+    : null;
 
   return (
     <div>
