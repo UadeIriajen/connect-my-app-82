@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   Send,
+  Workflow,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const nav = [
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/lists", label: "Lists", icon: List },
   { to: "/templates", label: "Templates", icon: FileText },
+  { to: "/campaigns", label: "Campaigns", icon: Workflow },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
