@@ -86,6 +86,24 @@ function Dashboard() {
         })}
       </div>
 
+      {breakdown ? (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Delivery breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {breakdown.map((b) => (
+                <div key={b.label} className="rounded-md border p-4">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{b.label}</p>
+                  <p className="text-2xl font-semibold mt-1">{b.value}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Upcoming scheduled emails</CardTitle>
