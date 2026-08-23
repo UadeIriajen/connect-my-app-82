@@ -25,8 +25,8 @@ function SignupPage() {
     setLoading(true);
     try {
       await signup(username, email, password);
-      toast.success("Account created");
-      navigate({ to: "/dashboard" });
+      toast.success("Account created — check your email for a verification code");
+      navigate({ to: "/verify-otp", search: { email } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Signup failed");
     } finally {
