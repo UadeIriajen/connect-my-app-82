@@ -27,20 +27,50 @@ function toLocalInputValue(iso?: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+const STATUSES = ["all", "Pending", "Sent", "Failed", "Canceled"] as const;
+const TIME_FILTERS = ["all", "upcoming", "history"] as const;
+
 function EmailsPage() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["emails"], queryFn: apiClient.listEmails });
+  const [status, setStatus] = useState<string>("all");
+  const [timeFilter, setTimeFilter] = useState<string>("all");
   const [editing, setEditing] = useState<ScheduleResponse | null>(null);
   const [open, setOpen] = useState(false);
 
+  const filtered = status !== "all" || timeFilter !== "all";
+  const { data, isLoading } = useQuery({
+    queryKey: ["emails", status, timeFilter],
+    queryFn: () =>
+      filtered
+        ? apiClient.filterEmails({
+            status: status === "all" ? null : status,
+            time_filter: timeFilter === "all" ? null : timeFilter,
+          })
+        : apiClient.listEmails(),
+  });
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["emails"] });
+    qc.invalidateQueries({ queryKey: ["email-stats"] });
+  };
+  const onErr = (e: unknown) => toast.error(e instanceof Error ? e.message : "Failed");
+
   const del = useMutation({
     mutationFn: (id: number) => apiClient.deleteEmail(id),
-    onSuccess: () => {
-      toast.success("Email deleted");
-      qc.invalidateQueries({ queryKey: ["emails"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+    onSuccess: () => { toast.success("Email deleted"); refresh(); },
+    onError: onErr,
   });
+  const cancel = useMutation({
+    mutationFn: (id: number) => apiClient.cancelEmail(id),
+    onSuccess: () => { toast.success("Email canceled"); refresh(); },
+    onError: onErr,
+  });
+  const retry = useMutation({
+    mutationFn: (id: number) => apiClient.retryEmail(id),
+    onSuccess: () => { toast.success("Retry queued"); refresh(); },
+    onError: onErr,
+  });
+
 
   return (
     <div>
