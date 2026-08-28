@@ -1,4 +1,5 @@
-const DEFAULT_BASE_URL = "http://127.0.0.1:8000";
+const DEFAULT_BASE_URL =
+  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
 const BASE_URL_KEY = "api_base_url";
 const TOKEN_KEY = "api_token";
